@@ -1,1 +1,1 @@
-# GenAI_AIRA
+# GenAI_projects
