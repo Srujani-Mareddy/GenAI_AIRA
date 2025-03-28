@@ -9,3 +9,9 @@ pypdf
 faiss-cpu
 google-generativeai
 chromadb
+llama-cpp-python
+langchain-ollama
+ipykernel
+sentence-transformers
+openpyxl
+streamlit-extras
