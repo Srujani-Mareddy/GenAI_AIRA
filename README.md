@@ -1,28 +1,26 @@
-# Research Paper Q&A with Groq and Llama3
+# Q&A Chatbot with OpenAI
 
-This Streamlit application allows users to query research papers using **Retrieval-Augmented Generation (RAG)** with the **Llama3 model** powered by Groq. The application supports question-answering based on the content of research papers loaded from PDF files, embedding the documents into a vector database using **OpenAI Embeddings** and **FAISS**. 
+This project implements a question-and-answer chatbot using **Langchain Core**, **Streamlit**, and **OpenAI's GPT models**. The chatbot allows users to ask questions, and the responses are generated using OpenAI's language models. You can adjust parameters such as the model, temperature, and token limit from the sidebar.
 
-![alt text](<Screenshot 2024-10-11 at 3.34.43 PM.png>)
+![alt text](<Screenshot 2024-10-07 at 5.30.05 PM.png>)
 
 ## Features
-- Load and preprocess research papers from PDFs.
-- Embed documents using **OpenAI Embeddings** and store them in a **FAISS** vector store.
-- Retrieve relevant chunks from the research papers based on user queries.
-- Generate accurate responses using the **Llama3** model with **Groq**.
-- Display the relevant document chunks retrieved during the similarity search.
+- Choose from different OpenAI models (e.g., GPT-3.5, GPT-4).
+- Adjust temperature and max tokens for responses.
+- Simple and interactive interface using Streamlit.
 
-## Installation
+## Requirements
 
-### Prerequisites
-Ensure you have the following installed:
-- Python 3.8+
-- Streamlit
-- `dotenv` for environment variable management
+Ensure you have the following dependencies installed:
 
-### Clone the repository
+- Python 3.12 or higher
+- `streamlit`
+- `openai`
+- `langchain_openai`
+- `langchain_core`
+- `python-dotenv`
+
+Install the required packages with the following command:
+
 ```bash
-git clone <repository-url>
-cd <repository-directory>
-
-
-
+pip install -r requirements.txt

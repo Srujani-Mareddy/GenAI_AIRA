@@ -1,77 +1,58 @@
 import streamlit as st
-import os
-from langchain_groq import ChatGroq
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.embeddings import OllamaEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains.combine_documents import create_stuff_documents_chain
+import openai
+from langchain_openai import ChatOpenAI
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.chains import create_retrieval_chain
-from langchain_community.vectorstores import FAISS
-from langchain_community.document_loaders import PyPDFDirectoryLoader
 
+import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
-os.environ["OPENAI_API_KEY"]=os.getenv("OPENAI_API_KEY")
-os.environ["GROQ_API_KEY"]=os.getenv("GROQ_API_KEY")
+# Langsmith Tracking
+os.environ['LANGCHAIN_API_KEY']=os.getenv("LANGCHAIN_API_KEY")
+os.environ["LANGCHAIN_TRACKING_V2"]="true"
+os.environ["LANGCHAIN_PROJECT"]="Q&A Chatbot with OpenAI"
 
-groq_api_key=os.getenv("GROQ_API_KEY")
-
-llm=ChatGroq(groq_api_key=groq_api_key, model_name="Llama3-8b-8192")
-
-prompt=ChatPromptTemplate.from_template(
-     """
-     Answer the questions based on the provided context only.
-     Please provide the most accurate response based on the question
-     <context>
-     {context}
-     <context>
-     Question:{input}
-
-     """
+## Prompt Template
+prompt=ChatPromptTemplate.from_messages(
+    [
+        ("system","You are a helpful assistant, Please give response to the user queries"),
+        ("user","Question:{question}")
+    ]
 )
-def create_vector_embedding():
-    if "vectors" not in st.session_state:
-        st.session_state.embeddings=OpenAIEmbeddings()
-        # Data Ingestion
-        st.session_state.loader=PyPDFDirectoryLoader("research_papers")
-        st.session_state.docs=st.session_state.loader.load()
-        st.session_state.text_splitter=RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        st.session_state.final_docuemnts=st.session_state.text_splitter.split_documents(st.session_state.docs[:50])
-        st.session_state.vectors=FAISS.from_documents(st.session_state.final_docuemnts, st.session_state.embeddings)
 
-st.title("RAG Document Q&A with Groq and Llama3")
-user_prompt=st.text_input("Enter your query from the research paper")
+def generate_response(question, api_key,llm, temperature, max_tokens):
+    openai.api_key=api_key
+    llm=ChatOpenAI(model=llm)
+    output_parser=StrOutputParser()
+    chain=prompt|llm|output_parser
+    answer=chain.invoke({'question':question})
+    return answer
 
-if st.button("Document Embedding"):
-    create_vector_embedding()
-    st.write("Vector database is ready")
+## Title of the app
+st.title("Q&A Chatbot with OpenAI")
 
-import time
+## Sidebar for settings
+st.sidebar.title("Settings")
+api_key=st.sidebar.text_input("Enter your Open AI API Key: ", type="password")
 
-if user_prompt:
-    document_chain=create_stuff_documents_chain(llm,prompt)
-    retriever=st.session_state.vectors.as_retriever()
-    retrieval_chain=create_retrieval_chain(retriever, document_chain)
+# Drop down to select OpenAI models
+llm=st.sidebar.selectbox("Select and OpenAI Model",["gpt-4o","gpt-4-turbo","gpt-4","gpt-3.5-turbo"])
 
-    start=time.process_time()
-    response=retrieval_chain.invoke({'input':user_prompt})
-    print(f"Response time :{time.process_time()-start}")
+# Adjust respone parameter
+temperature=st.sidebar.slider("Temperature",min_value=0.0, max_value=1.0, value=0.7)
+max_tokens=st.sidebar.slider("Max Tokens",min_value=50, max_value=300, value=150)
 
-    st.write(response['answer'])
+# Main interface for user imput
+st.write("Go ahead and ask any question")
+user_input=st.text_input("You:")
 
-    #streamlit expander
-    with st.expander("Document Similarity Search"):
-        for i, doc in enumerate(response['context']):
-            st.write(doc.page_content)
-            st.write('-------------------')
-
-
-
-
-
-
+if user_input:
+    response=generate_response(user_input, api_key, llm, temperature, max_tokens)
+    st.write(response)
+else:
+    st.write("Please provide the query")
 
 
 
